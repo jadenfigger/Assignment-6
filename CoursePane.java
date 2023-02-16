@@ -37,11 +37,44 @@ public class CoursePane extends HBox {
 
     // Step 1.1: declare any necessary instance variables here
     // ----
+    VBox leftPane;
+    VBox centerPane;
+    VBox rightPane;
+    Label leftBottomMessage;
+    Button addButton;
+    Button dropButton;
+    Label rightBottomMessage;
+
+    GridPane leftPaneInputGrid;
+    Label subjectLbl;
+    Label courseNumLbl;
+    Label instructorLbl;
+    ComboBox<String> subjectComboBox;
+    TextField courseNumField;
+    TextField instructorField;
 
     // constructor
     public CoursePane() {
         // step 1.2: initialize instance variables
         // ----
+        courseList = new ArrayList<Course>();
+        checkboxContainer = new VBox();
+
+        leftPane = new VBox();
+        rightPane = new VBox();
+        centerPane = new VBox();
+        leftBottomMessage = new Label("");
+        addButton = new Button("Add =>");
+        dropButton = new Button("Drop <=");
+        rightBottomMessage = new Label("Total Courses Enrolled: 0");
+
+        leftPaneInputGrid = new GridPane();
+        subjectLbl = new Label("Subject:");
+        courseNumLbl = new Label("Course Num:");
+        instructorLbl = new Label("Instructor:");
+        subjectComboBox = new ComboBox<String>();
+        courseNumField = new TextField();
+        instructorField = new TextField();
 
         Label labelLeft = new Label("Add Course(s)");
         labelLeft.setTextFill(Color.BLUE);
@@ -58,23 +91,40 @@ public class CoursePane extends HBox {
         // step 1.3: create and set up the layout of the leftPane, leftPane contains a
         // top label, the center sub-pane
         // and a label show at the bottom
-        // ----
+        subjectComboBox.getItems().addAll("ACC", "AME", "BME", "CHM", "CSE", "DAT", "EEE");
+        subjectComboBox.setValue("CSE");
+
+        leftPaneInputGrid.add(subjectLbl, 0, 0);
+        leftPaneInputGrid.add(courseNumLbl, 0, 1);
+        leftPaneInputGrid.add(instructorLbl, 0, 2);
+        leftPaneInputGrid.add(subjectComboBox, 1, 0);
+        leftPaneInputGrid.add(courseNumField, 1, 1);
+        leftPaneInputGrid.add(instructorField, 1, 2);
+
+        leftPane.getChildren().addAll(labelLeft, leftPaneInputGrid, leftBottomMessage);
 
         // step 1.4: create and set up the layout of the centerPane which holds the two
         // buttons
         // ----
+        centerPane.getChildren().addAll(addButton, dropButton);
 
         // step 1.5: create and set up the layout of the rightPane, rightPane contains a
         // top label,
         // checkboxContainer and a label show at the bottom
         // ----
+        rightPane.getChildren().addAll(labelRight, checkboxContainer, rightBottomMessage);
 
         // CoursePane is a HBox. Add leftPane, centerPane and rightPane inside
+        this.getChildren().addAll(leftPane, centerPane, rightPane);
         this.setPadding(new Insets(10, 10, 10, 10));
         // ----
 
         // Step 3: Register the GUI component with its handler class
         // ----
+        addButton.setOnAction(new ButtonHandler());
+        dropButton.setOnAction(new ButtonHandler());
+        subjectComboBox.setOnAction(new ComboBoxHandler());
+        checkboxContainer.setRotationAxis(getRotationAxis());
 
     } // end of constructor
 
@@ -86,65 +136,81 @@ public class CoursePane extends HBox {
     // 3) register the CheckBox with the CheckBoxHandler.
     public void updateCheckBoxContainer() {
         checkboxContainer.getChildren().clear();
-        // ----
-        // ----
+        for (int i = 0; i < courseList.size(); i++) {
+            CheckBox checkBox = new CheckBox(courseList.get(i).toString());
+            checkboxContainer.getChildren().add(checkBox);
+            checkBox.setOnAction(new CheckBoxHandler(courseList.get(i)));
+        }
+        rightBottomMessage.setText("Total Course Enrolled: " + courseList.size());
     }
 
     // Step 2.2: Create a ButtonHandler class
     private class ButtonHandler implements EventHandler<ActionEvent> {
-        public void handle(ActionEvent e)
-        {
-            //----
+        public void handle(ActionEvent e) {
+            // ----
 
             try {
-					if (//everything is entered correctly and the "Add =>" button is pressed
-              	    {
-                	   //need to check whether the course already exist inside the courseList or not
-                	   if (//it's a new course)
-                	   {
-						   //----
-					   }
-					   else //a duplicated one
-					   {
-						   //show error message
-						   //----
-					   }
-
+                if (e.getSource() == addButton
+                        && !(courseNumField.getText().equals("") || instructorField.getText().equals(""))) {
+                    // need to check whether the course already exist inside the courseList or not
+                    Course newCourse = new Course(subjectComboBox.getValue(),
+                            Integer.parseInt(courseNumField.getText()), instructorField.getText());
+                    if (!courseList.forEach((c) -> c.equals(newCourse))) {
+                        courseList.add(newCourse);
+                        updateCheckBoxContainer();
+                        leftBottomMessage.setText("Course added successfully!");
+                        leftBottomMessage.setTextFill(Color.BLUE);
+                    } else // a duplicated one
+                    {
+                        leftBottomMessage.setText("Course already exists - Not added");
+                        leftBottomMessage.setTextFill(Color.RED);
                     }
 
-                   //Clear all the text fields and prepare for the next entry;
-                   //----
-
-                   else if ( //">=" button is pressed, but one of the text field is empty
-                  {
-                    //----
-               	  }
-
-                else if ( //when "Drop Course" button is pushed.)
-                {
-                    //----
                 }
-                else  //  for all other invalid actions, thrown an exception and it will be caught
+
+                else if (courseNumField.getText().equals("") || instructorField.getText().equals("")) {
+                    leftBottomMessage.setText("All fields must be filled");
+                    leftBottomMessage.setTextFill(Color.RED);
+                } else if (e.getSource() == dropButton) {
+                    for (int i = 0; i < checkboxContainer.getChildren().size(); i++) {
+                        CheckBox cb = (CheckBox) checkboxContainer.getChildren().get(i);
+                        if (cb.isSelected()) {
+                            courseList.remove(i);
+                            updateCheckBoxContainer();
+                            i--;
+                        }
+                    }
+                } else // for all other invalid actions, thrown an exception and it will be caught
                 {
-					//----
-				}
+                    throw new Exception("Invalid Action!");
+                }
 
-            } //end of try
+                // Clear all the text fields and prepare for the next entry;
+                // ----
+                subjectComboBox.setValue("CSE");
+                courseNumField.setText("");
+                instructorField.setText("");
+                leftBottomMessage.setText("");
 
-            catch(NumberFormatException ex)
-            {
-                //----
-            }
-            catch(Exception exception)
-            {
-                //----
+            } // end of try
+
+            catch (NumberFormatException exception) {
+                leftBottomMessage.setText("Course Num must be an integer - Not added");
+                leftBottomMessage.setTextFill(Color.RED);
+            } catch (Exception exception) {
+                leftBottomMessage.setText(exception.getMessage());
+                leftBottomMessage.setTextFill(Color.RED);
             }
         } // end of handle() method
     } // end of ButtonHandler class
 
     //// Step 2.3: A ComboBoxHandler
     private class ComboBoxHandler implements EventHandler<ActionEvent> {
-        // ----
+        public void handle(ActionEvent e) {
+            if (e.getSource() == subjectComboBox) {
+                leftBottomMessage.setText("");
+            }
+        }
 
     }// end of ComboBoxHandler
 
@@ -156,11 +222,16 @@ public class CoursePane extends HBox {
 
         // constructor
         public CheckBoxHandler(Course oneCourse) {
-            // ----
+            this.oneCourse = oneCourse;
         }
 
         public void handle(ActionEvent e) {
-            // ----
+            CheckBox cb = (CheckBox) e.getSource();
+            if (cb.isSelected()) {
+                cb.setSelected(true);
+            } else {
+                cb.setSelected(false);
+            }
         }
     }// end of CheckBoxHandler
 
