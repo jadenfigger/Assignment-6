@@ -124,6 +124,7 @@ public class CoursePane extends HBox {
         addButton.setOnAction(new ButtonHandler());
         dropButton.setOnAction(new ButtonHandler());
         subjectComboBox.setOnAction(new ComboBoxHandler());
+        courseNumField.setOnAction(new TextFieldHandler());
         checkboxContainer.setRotationAxis(getRotationAxis());
 
     } // end of constructor
@@ -150,35 +151,59 @@ public class CoursePane extends HBox {
             // ----
 
             try {
-                if (e.getSource() == addButton
-                        && !(courseNumField.getText().equals("") || instructorField.getText().equals(""))) {
+                if (e.getSource() == addButton) {
+                    
+                    // Check whether all fields are filled
+                    if (courseNumField.getText().equals("") || instructorField.getText().equals("")) {
+                        System.out.println("All fields must be filled");
+                        leftBottomMessage.setText("All fields must be filled");
+                        leftBottomMessage.setTextFill(Color.RED);
+                    }
+                    
                     // need to check whether the course already exist inside the courseList or not
                     Course newCourse = new Course(subjectComboBox.getValue(),
                             Integer.parseInt(courseNumField.getText()), instructorField.getText());
-                    if (!courseList.forEach((c) -> c.equals(newCourse))) {
+                    
+                    
+                    if (!courseList.contains(newCourse)) {
                         courseList.add(newCourse);
                         updateCheckBoxContainer();
                         leftBottomMessage.setText("Course added successfully!");
                         leftBottomMessage.setTextFill(Color.BLUE);
-                    } else // a duplicated one
+                    } 
+                    else // a duplicated one
                     {
+                        System.out.println("Duplicate");
                         leftBottomMessage.setText("Course already exists - Not added");
                         leftBottomMessage.setTextFill(Color.RED);
                     }
 
-                }
-
-                else if (courseNumField.getText().equals("") || instructorField.getText().equals("")) {
-                    leftBottomMessage.setText("All fields must be filled");
-                    leftBottomMessage.setTextFill(Color.RED);
-                } else if (e.getSource() == dropButton) {
+                }                    
+                else if (e.getSource() == dropButton) {
+                    int numDropped = 0; // integer variable used to keep track of courses being dropped
                     for (int i = 0; i < checkboxContainer.getChildren().size(); i++) {
                         CheckBox cb = (CheckBox) checkboxContainer.getChildren().get(i);
                         if (cb.isSelected()) {
                             courseList.remove(i);
                             updateCheckBoxContainer();
                             i--;
+                            numDropped++;
                         }
+                    }
+                    if (numDropped == 1) {
+                        // message to let user know course was dropped successfully
+                        leftBottomMessage.setText("Course dropped sucessfully");
+                        leftBottomMessage.setTextFill(Color.BLUE);
+                    }
+                    else if (numDropped > 1) {
+                        // message to let user know the courses were dropped successfully
+                        leftBottomMessage.setText("Courses dropped sucessfully");
+                        leftBottomMessage.setTextFill(Color.BLUE);
+                    }
+                    else {
+                        // message to let user know to check boxes to drop courses
+                        leftBottomMessage.setText("Please select the Course(s) you would like to drop");
+                        leftBottomMessage.setTextFill(Color.RED);
                     }
                 } else // for all other invalid actions, thrown an exception and it will be caught
                 {
@@ -190,7 +215,6 @@ public class CoursePane extends HBox {
                 subjectComboBox.setValue("CSE");
                 courseNumField.setText("");
                 instructorField.setText("");
-                leftBottomMessage.setText("");
 
             } // end of try
 
@@ -211,7 +235,13 @@ public class CoursePane extends HBox {
                 leftBottomMessage.setText("");
             }
         }
+    }// end of ComboBoxHandler
 
+    // Used to reset the value of leftBottomMessage when the user clicks on the field
+    private class TextFieldHandler implements EventHandler<ActionEvent> {
+        public void handle(ActionEvent e) {
+            leftBottomMessage.setText("");
+        }
     }// end of ComboBoxHandler
 
     // Step 2.4: A CheckBoxHandler

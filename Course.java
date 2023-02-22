@@ -53,7 +53,14 @@ public class Course {
                 "\nInstructor:\t" + instructor + "\n";
     }
 
-    public boolean equals(String subject, int courseNum, String instructor) {
-        return this.subject.equals(subject) && this.courseNum == courseNum && this.instructor.equals(instructor);
+    @Override
+    public boolean equals(Object object) {
+        boolean same = false;
+
+        if (object != null && object instanceof Course) { 
+            same = this.subject.equals(((Course)object).subject) && this.courseNum == ((Course)object).courseNum && this.instructor.equals(((Course)object).instructor);
+        }
+
+        return same;
     }
 }
